@@ -4,6 +4,7 @@
     using System.Xml;
     using System;
     using System.Linq;
+    using System.Text;
 
     internal class Program
     {
@@ -36,10 +37,17 @@
                     words.Add(word);
                 }
 
-                word = word.Replace("'", "%27");
-                word = word.Replace(" ", "+");
+                string url;
+                if (ordbok == "slangopedia")
+                {
+                    url = $@"https://www.slangopedia.se/ordlista/?ord={EncodeToIso88591Url(word)}";
+                }else
+                {
+                    word = word.Replace("'", "%27");
+                    word = word.Replace(" ", "+");
 
-                var url = $@"https://svenska.se/tri/f_{ordbok.ToLower()}.php?sok={word}";
+                    url = $@"https://svenska.se/tri/f_{ordbok.ToLower()}.php?sok={word}";
+                }
 
                 // Console.WriteLine("parsed word: " + word + "\nurl: " + url + "\n");
 
@@ -53,19 +61,37 @@
                     {
                         // Läs svaret som en sträng
                         string responseContent = await response.Content.ReadAsStringAsync();
+                        //Console.WriteLine(responseContent);
 
-                        if (responseContent.Contains($@"</strong> i {ordbok.ToUpper()} gav inga svar.<"))
+                        if (ordbok != "slangopedia")
                         {
-                            // Console.WriteLine(ordbok.ToUpper() + " - Fel!\n");
-                            fel++;
-                        }
-                        else
+                            if (responseContent.Contains($@"</strong> i {ordbok.ToUpper()} gav inga svar.<"))
+                            {
+                                // Console.WriteLine(ordbok.ToUpper() + " - Fel!\n");
+                                fel++;
+                            }
+                            else
+                            {
+                                // Console.WriteLine(ordbok.ToUpper() + " - KORREKT!\n");
+                                rätt++;
+                                guessed = true;
+                            }
+                            // </strong> i SAOL gav inga svar.<br /><br>
+                        } 
+                        else 
                         {
-                            // Console.WriteLine(ordbok.ToUpper() + " - KORREKT!\n");
-                            rätt++;
-                            guessed = true;
+                            if (responseContent.Contains($@"</i> finns inte i ordlistan. "))
+                            {
+                                fel++;
+                                //Console.WriteLine("finns inte");
+                            }
+                            else
+                            {
+                                rätt++;
+                                //Console.WriteLine("finns");
+                                guessed = true;
+                            }
                         }
-                        // </strong> i SAOL gav inga svar.<br /><br>
                     }
                     else
                     {
@@ -152,11 +178,36 @@
                         guessed = true;
                         Console.ReadKey(true);
                     }
+
                     if (!guessed) await check(input, "saol");
                     if (!guessed) await check(input, "so");
+                    if (!guessed) await check(input, "slangopedia");
                     if (!guessed) await check(input, "saob");
                 }
             }
+        }
+        static string EncodeToIso88591Url(string input)
+        {
+            // Konvertera till bytearray med ISO-8859-1
+            Encoding iso88591 = Encoding.GetEncoding("ISO-8859-1");
+            byte[] bytes = iso88591.GetBytes(input);
+
+            // Bygg URL-enkodad sträng
+            StringBuilder encoded = new StringBuilder();
+            foreach (byte b in bytes)
+            {
+                // Endast alfanumeriska tecken lämnas som de är
+                if ((b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9'))
+                {
+                    encoded.Append((char)b);
+                }
+                else
+                {
+                    encoded.AppendFormat("%{0:X2}", b);
+                }
+            }
+
+            return encoded.ToString();
         }
     }
 }
