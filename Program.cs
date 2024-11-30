@@ -39,7 +39,7 @@
                 word = word.Replace("'", "%27");
                 word = word.Replace(" ", "+");
 
-                var url = $@"https://svenska.se/tri/f_{ordbok.ToLower()}.php?sok={word}&pz=1";
+                var url = $@"https://svenska.se/tri/f_{ordbok.ToLower()}.php?sok={word}";
 
                 // Console.WriteLine("parsed word: " + word + "\nurl: " + url + "\n");
 
@@ -53,7 +53,7 @@
                     {
                         // Läs svaret som en sträng
                         string responseContent = await response.Content.ReadAsStringAsync();
-                        // Console.WriteLine("Svar från servern: " + responseContent);
+
                         if (responseContent.Contains($@"</strong> i {ordbok.ToUpper()} gav inga svar.<"))
                         {
                             // Console.WriteLine(ordbok.ToUpper() + " - Fel!\n");
@@ -146,7 +146,7 @@
                 while (!guessed)
                 {
                     string input = Console.ReadLine();
-                    // if (!guessed) await check(input, "saol");
+                    if (!guessed) await check(input, "saol");
                     if (!guessed) await check(input, "so");
                     if (!guessed) await check(input, "saob");
                 }
