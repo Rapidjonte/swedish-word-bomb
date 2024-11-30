@@ -21,12 +21,15 @@
             {
                 // Console.WriteLine("input word: " + word);
 
-                word = Regex.Replace(word, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
+                if (ordbok != "slangopedia")
+                {
+                    word = Regex.Replace(word, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
+                    characters = Regex.Replace(characters, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
+                    word = word.ToLower();
+                    characters = characters.ToLower();
+                }
                 word = word.Trim();
-                word = word.ToLower();
-                characters = Regex.Replace(characters, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
                 characters = characters.Trim();
-                characters = characters.ToLower();
 
                 if (words.Contains(word) || !word.Contains(characters))
                 {
@@ -40,7 +43,8 @@
                 string url;
                 if (ordbok == "slangopedia")
                 {
-                    url = $@"https://www.slangopedia.se/ordlista/?ord={EncodeToIso88591Url(word)}";
+                    url = $@"https://www.slangopedia.se/ordlista/?ord={EncodeToCustomUrl(word)}";
+                    Console.WriteLine(url);
                 }else
                 {
                     word = word.Replace("'", "%27");
@@ -186,24 +190,38 @@
                 }
             }
         }
-        static string EncodeToIso88591Url(string input)
+        static string EncodeToCustomUrl(string input)
         {
-            // Konvertera till bytearray med ISO-8859-1
-            Encoding iso88591 = Encoding.GetEncoding("ISO-8859-1");
-            byte[] bytes = iso88591.GetBytes(input);
-
-            // Bygg URL-enkodad sträng
+            // Skapa en StringBuilder för att bygga den kodade strängen
             StringBuilder encoded = new StringBuilder();
-            foreach (byte b in bytes)
+
+            foreach (char c in input)
             {
-                // Endast alfanumeriska tecken lämnas som de är
-                if ((b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9'))
+                // Kontrollera om tecknet är alfanumeriskt (bokstäver och siffror)
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
                 {
-                    encoded.Append((char)b);
+                    encoded.Append(c); // Behåll alfanumeriska tecken (både bokstäver och siffror)
+                }
+                else if (c == ' ')  // Hantera mellanslag genom att byta ut det mot "+"
+                {
+                    encoded.Append('+');
+                }
+                else if (c == '&')  // Kodar tecknet '&' som '%26'
+                {
+                    encoded.Append("%26");
+                }
+                else if (c == '.')  // Behåll punkten utan att koda den
+                {
+                    encoded.Append(c);
+                }
+                else if (c == '-')  // Behåll bindestreck utan att koda det
+                {
+                    encoded.Append(c);
                 }
                 else
                 {
-                    encoded.AppendFormat("%{0:X2}", b);
+                    // För alla andra tecken, använd procentkodning
+                    encoded.AppendFormat("%{0:X2}", (int)c);
                 }
             }
 
