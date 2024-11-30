@@ -25,11 +25,12 @@
                 {
                     word = Regex.Replace(word, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
                     characters = Regex.Replace(characters, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
-                    word = word.ToLower();
-                    characters = characters.ToLower();
                 }
+
                 word = word.Trim();
-                characters = characters.Trim();
+                word = word.ToLower();
+                characters = characters.Trim(); 
+                characters = characters.ToLower();
 
                 if (words.Contains(word) || !word.Contains(characters))
                 {
@@ -44,8 +45,8 @@
                 if (ordbok == "slangopedia")
                 {
                     url = $@"https://www.slangopedia.se/ordlista/?ord={EncodeToCustomUrl(word)}";
-                    Console.WriteLine(url);
-                }else
+                    //Console.WriteLine(url);
+                } else
                 {
                     word = word.Replace("'", "%27");
                     word = word.Replace(" ", "+");
