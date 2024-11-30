@@ -2,27 +2,46 @@
 {
     using System.Text.RegularExpressions;
     using System.Xml;
+    using System;
+    using System.Linq;
 
     internal class Program
     {
         public static bool guessed = false;
+        public static int rätt = 0;
+        public static int fel = 0;
+        public static List<string> words = new List<string>();
+        public static string characters;
 
         public async static Task check(string word, string ordbok)
         {
             // Skapa en HttpClient-instans
             using (HttpClient client = new HttpClient())
             {
-                Console.WriteLine("input word: " + word);
+                // Console.WriteLine("input word: " + word);
 
                 word = Regex.Replace(word, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
                 word = word.Trim();
                 word = word.ToLower();
+                characters = Regex.Replace(characters, @"[^a-zA-ZåäöÅÄÖéÉ' \-]", "");
+                characters = characters.Trim();
+                characters = characters.ToLower();
+
+                if (words.Contains(word) || !word.Contains(characters))
+                {
+                    return;
+                } 
+                else
+                {
+                    words.Add(word);
+                }
+
                 word = word.Replace("'", "%27");
                 word = word.Replace(" ", "+");
 
                 var url = $@"https://svenska.se/tri/f_{ordbok.ToLower()}.php?sok={word}&pz=1";
 
-                Console.WriteLine("parsed word: " + word + "\nurl: " + url + "\n");
+                // Console.WriteLine("parsed word: " + word + "\nurl: " + url + "\n");
 
                 try
                 {
@@ -34,14 +53,16 @@
                     {
                         // Läs svaret som en sträng
                         string responseContent = await response.Content.ReadAsStringAsync();
-                        //Console.WriteLine("Svar från servern: " + responseContent);
+                        // Console.WriteLine("Svar från servern: " + responseContent);
                         if (responseContent.Contains($@"</strong> i {ordbok.ToUpper()} gav inga svar.<"))
                         {
-                            Console.WriteLine(ordbok.ToUpper() + " - Fel!\n");
+                            // Console.WriteLine(ordbok.ToUpper() + " - Fel!\n");
+                            fel++;
                         }
                         else
                         {
                             // Console.WriteLine(ordbok.ToUpper() + " - KORREKT!\n");
+                            rätt++;
                             guessed = true;
                         }
                         // </strong> i SAOL gav inga svar.<br /><br>
@@ -107,20 +128,25 @@
         {
             while (true)
             {
+                Console.Clear();
                 string randomWord = GetRandomWrittenForm("ao.xml");
-                Console.WriteLine(randomWord);
+                // Console.WriteLine(randomWord);
                 Random rng = new Random();
-                string characters = randomWord.Substring(rng.Next(0, randomWord.Length-1));
+                characters = randomWord.Substring(rng.Next(0, randomWord.Length-1));
                 if (characters.Length > 3)
                 {
                     characters = characters.Remove(rng.Next(2, 4));
                 }
-                Console.WriteLine(characters);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(characters + "\n");
+                Console.ForegroundColor = ConsoleColor.White;
+
                 guessed = false;
                 while (!guessed)
                 {
                     string input = Console.ReadLine();
-                    if (!guessed) await check(input, "saol");
+                    // if (!guessed) await check(input, "saol");
                     if (!guessed) await check(input, "so");
                     if (!guessed) await check(input, "saob");
                 }
