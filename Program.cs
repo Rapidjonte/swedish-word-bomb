@@ -1,6 +1,7 @@
 ﻿namespace ConsoleApp19
 {
     using System.Text.RegularExpressions;
+    using System.Xml;
 
     internal class Program
     {
@@ -37,11 +38,10 @@
                         if (responseContent.Contains($@"</strong> i {ordbok.ToUpper()} gav inga svar.<"))
                         {
                             Console.WriteLine(ordbok.ToUpper() + " - Fel!\n");
-                            guessed = false;
                         }
                         else
                         {
-                            Console.WriteLine(ordbok.ToUpper() + " - KORREKT!\n");
+                            // Console.WriteLine(ordbok.ToUpper() + " - KORREKT!\n");
                             guessed = true;
                         }
                         // </strong> i SAOL gav inga svar.<br /><br>
@@ -58,14 +58,72 @@
             }
         }
 
+        public static string GetRandomWrittenForm(string xmlFilePath)
+        {
+            try
+            {
+                // Ladda XML-dokumentet
+                string xmlContent = System.IO.File.ReadAllText(xmlFilePath);
+
+                // Ladda XML i en XmlDocument
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(xmlContent);
+
+                // Hitta alla <feat> med attributet "att" = "writtenForm"
+                XmlNodeList writtenFormNodes = xmlDoc.SelectNodes("//feat[@att='writtenForm']");
+
+                // Lista för att lagra alla "writtenForm"-värden
+                List<string> writtenForms = new List<string>();
+
+                // Lägg till alla "writtenForm"-värden till listan
+                foreach (XmlNode node in writtenFormNodes)
+                {
+                    writtenForms.Add(node.Attributes["val"].Value);
+                }
+
+                // Kontrollera om vi har några ord
+                if (writtenForms.Count > 0)
+                {
+                    // Skapa en random generator
+                    Random random = new Random();
+
+                    // Välj ett slumpmässigt ord från listan
+                    return writtenForms[random.Next(writtenForms.Count)];
+                }
+                else
+                {
+                    Console.WriteLine("Ingen 'writtenForm' hittades.");
+                    return null;  // Ingen "writtenForm" hittades
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ett fel uppstod: " + ex.Message);
+                return null;
+            }
+        }
+
         static async Task Main(string[] args)
         {
             while (true)
             {
-                string input = Console.ReadLine();
-                await check(input, "saol");
-                await check(input, "so");
-                await check(input, "saob");
+                string randomWord = GetRandomWrittenForm("ao.xml");
+                Console.WriteLine(randomWord);
+                Random rng = new Random();
+                string characters = randomWord.Substring(rng.Next(0, randomWord.Length-1));
+                if (characters.Length > 3)
+                {
+                    characters = characters.Remove(rng.Next(2, 4));
+                }
+                Console.WriteLine(characters);
+                guessed = false;
+                while (!guessed)
+                {
+                    string input = Console.ReadLine();
+                    if (!guessed) await check(input, "saol");
+                    if (!guessed) await check(input, "so");
+                    if (!guessed) await check(input, "saob");
+                }
             }
         }
     }
