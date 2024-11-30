@@ -146,6 +146,12 @@
                 while (!guessed)
                 {
                     string input = Console.ReadLine();
+                    if (input == "/?" || input == "/ff" || input == "/die" || input == "/kill" || input == "/forfeit" || input == "/resign" || input == "/giveup" || input == "/suicide" || input == "/skip" || input == "/pass" || input == "/idk")
+                    {
+                        Console.WriteLine(randomWord + "\n");
+                        guessed = true;
+                        Console.ReadKey(true);
+                    }
                     if (!guessed) await check(input, "saol");
                     if (!guessed) await check(input, "so");
                     if (!guessed) await check(input, "saob");
